@@ -1,10 +1,11 @@
 import random
-
+import numpy as np
 class RankedBasedSelection:
-    def __init__(self, domain, number_of_population, max_iterations):
+    def __init__(self, domain, number_of_population, max_iterations, rank):
         self._domain = domain
         self._number_of_population = number_of_population
         self._max_iterations = max_iterations
+        self._rank = rank
 
     def random_population(self):
         """ Get a random population to evaluate """
@@ -44,9 +45,9 @@ class RankedBasedSelection:
             for j in range(self._number_of_population):
                 if self.fitness(population[i]) == current_population_fitness[j]:
                     if i == 0:
-                        cummulative_probability.append(j+1/self._number_of_population)
+                        cummulative_probability.append(((j+1)**self._rank)/(self._number_of_population**self._rank))
                     else:
-                        cummulative_probability.append(cummulative_probability[i-1] + (j+1/self._number_of_population))
+                        cummulative_probability.append(cummulative_probability[i-1] + (((j+1)**self._rank)/(self._number_of_population**self._rank)))
                     break
 
         return cummulative_probability
@@ -62,7 +63,7 @@ class RankedBasedSelection:
         while iteration_normalizer < self._max_iterations:
             current_population = self.random_population()
 
-            selected_people = self.rankSelection(current_population)
+            selected_people = self.rank_selection(current_population)
             currents_population_fitnesses = [self.fitness(selected_people[i]) for i in range(len(selected_people))]
             selected_peoples_best_fitness = min(currents_population_fitnesses)
             current_solution = currents_population_fitnesses.index(selected_peoples_best_fitness)
@@ -83,21 +84,21 @@ class RankedBasedSelection:
 
         return (global_result, global_solution)
 
-    def rankSelection(self, current_population):
+    def rank_selection(self, current_population):
         selected_population = []
         cummulative_probability = self.cummulative_probability(current_population)
         
         # Get a list of population's length with random numbers between first and last cummulative values
-        selected_index = random.sample(range(int(cummulative_probability[0]), 
-                                    int(cummulative_probability[len(cummulative_probability)-1])), 
-                                    self._number_of_population)
+        selected_indexes = np.random.uniform(cummulative_probability[0], 
+                                                cummulative_probability[len(cummulative_probability)-1], 
+                                                self._number_of_population) 
 
         # Pick the members that the randomized number is between the now and next cummulative probability
         # otherwise get the first element 
         for i in range(self._number_of_population):
             flag = 0
             for j in range(self._number_of_population - 1):
-                if cummulative_probability[j] < selected_index[i] and cummulative_probability[j+1] >= selected_index[i]:
+                if cummulative_probability[j] < selected_indexes[i] and cummulative_probability[j+1] >= selected_indexes[i]:
                     selected_population.append(current_population[j])
                     flag = 1
                     break

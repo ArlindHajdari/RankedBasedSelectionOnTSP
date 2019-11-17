@@ -10,7 +10,7 @@ def main():
     content = StringIO(f"{file.read()}")
 
     distances = np.loadtxt(content, dtype = int)
-    algorithm = RankedBasedSelection(distances, POPULATION_NUMBER, MAX_ITERATIONS)
+    algorithm = RankedBasedSelection(distances, POPULATION_NUMBER, MAX_ITERATIONS, 1.2)
 
     print(algorithm.commit())
 
